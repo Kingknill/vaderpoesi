@@ -1,0 +1,329 @@
+/* Grundläggande styling */
+body {
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  transition: background 1s ease-in-out;
+}
+
+header {
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 2px solid #ddd;
+  position: relative;
+}
+
+h1 {
+  font-family: 'Merriweather', serif;
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+#userPoints {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 1rem;
+  color: #4a90e2;
+}
+
+/* Söksektion */
+.search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  position: relative;
+  gap: 10px;
+}
+
+#nameInput, #cityInput {
+  padding: 12px;
+  font-size: 1.1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#nameInput {
+  width: 150px;
+}
+
+#cityInput {
+  flex: 1;
+}
+
+#clearButton {
+  margin-left: 5px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+#searchButton, #geolocationButton, #saveFavorite, #submitChallenge {
+  padding: 12px 20px;
+  font-size: 1rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#searchButton:hover, #geolocationButton:hover, #saveFavorite:hover, #submitChallenge:hover {
+  background-color: #357ab8;
+}
+
+#autocomplete {
+  position: absolute;
+  top: 100%;
+  left: 160px;
+  width: calc(100% - 160px);
+  max-width: 600px;
+  z-index: 10;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.autocomplete-item:hover, .autocomplete-item.highlight {
+  background-color: #f0f0f0;
+}
+
+.loading {
+  margin-top: 10px;
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Dynamisk bakgrund och animationer */
+.sunny { background: linear-gradient(to bottom, #FFD700, #FFA500); }
+.cloudy { background: linear-gradient(to bottom, #B0C4DE, #778899); }
+.rainy { background: linear-gradient(to bottom, #87CEEB, #4682B4); }
+.snowy { background: linear-gradient(to bottom, #FFFFFF, #E0E0E0); }
+
+#animationContainer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes rain {
+  0% { transform: translateY(-10px); opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes snow {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(100vh) rotate(360deg); }
+}
+
+@keyframes cloud {
+  0% { transform: translateX(-100vw); }
+  100% { transform: translateX(100vw); }
+}
+
+.rain-animation {
+  position: absolute;
+  width: 3px;
+  height: 10px;
+  background: white;
+  animation: rain 1s infinite linear;
+}
+
+.snowflake {
+  position: absolute;
+  font-size: 1rem;
+  animation: snow 5s infinite linear;
+}
+
+.cloud-animation {
+  position: absolute;
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+  animation: cloud 20s infinite linear;
+}
+
+/* Resultatsektion */
+#weatherResult {
+  margin-top: 20px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  padding: 15px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  max-width: 80%;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+#weatherIcon {
+  font-size: 2rem;
+  margin-right: 10px;
+}
+
+#forecast {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+/* Sociala delningsknappar */
+#social-share {
+  margin-top: 20px;
+}
+
+.social-btn {
+  border: none;
+  padding: 10px 15px;
+  font-size: 1rem;
+  margin: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+}
+
+.facebook { background-color: #1877F2; }
+.twitter { background-color: #1DA1F2; }
+.instagram { background-color: #E4405F; }
+
+.facebook:hover { background-color: #1256A0; }
+.twitter:hover { background-color: #1177BB; }
+.instagram:hover { background-color: #C13584; }
+
+/* Utmaningssektion */
+#challenge-section {
+  margin: 40px auto;
+  max-width: 600px;
+}
+
+#challengeResponse {
+  width: 80%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical;
+}
+
+/* Favoritstäder */
+#favorites-section {
+  margin: 40px auto;
+  max-width: 600px;
+}
+
+#favoriteCities {
+  margin-top: 10px;
+}
+
+.favorite-city {
+  display: inline-block;
+  padding: 8px 12px;
+  margin: 5px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.favorite-city:hover {
+  background-color: #e0e0e0;
+}
+
+/* Community-sektion */
+#community-section {
+  margin: 40px auto;
+  max-width: 600px;
+}
+
+/* Feedback-sektion */
+#feedback-section {
+  margin: 40px auto;
+  max-width: 600px;
+}
+
+#feedbackForm textarea {
+  width: 80%;
+  max-width: 400px;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical;
+}
+
+#feedbackForm button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#feedbackForm button:hover {
+  background-color: #357ab8;
+}
+
+/* Footer */
+footer {
+  background-color: #f8f8f8;
+  padding: 1rem;
+  margin-top: 2rem;
+}
+
+#ad-container {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border: 1px dashed #ccc;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+#donateButton {
+  color: #4a90e2;
+  text-decoration: none;
+}
+
+#donateButton:hover {
+  text-decoration: underline;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+  .search-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  #nameInput, #cityInput, #searchButton, #geolocationButton {
+    width: 100%;
+    margin-left: 0;
+  }
+  #autocomplete {
+    left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  #weatherResult, #forecast {
+    max-width: 95%;
+  }
+}

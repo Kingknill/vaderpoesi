@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Väderpoesi – Upplev vädret med poesi</title>
+  <meta name="description" content="Upptäck dagens väder med poetiska beskrivningar och prognoser. Gör vädret till en känslomässig upplevelse med Väderpoesi!">
+  <meta name="keywords" content="väder, poesi, väderprognos, känslor, väderupplevelse, Sverige">
+  <meta property="og:title" content="Väderpoesi – Upplev vädret med poesi">
+  <meta property="og:description" content="Upptäck dagens väder med poetiska beskrivningar och prognoser. Gör vädret till en känslomässig upplevelse med Väderpoesi!">
+  <meta property="og:image" content="https://dinhemsida.com/og-image.jpg">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Merriweather:wght@700&display=swap">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🌤️ Väderpoesi</h1>
+    <p>Fånga vädret i poesi och känslor</p>
+    <div id="userPoints">Poesi-droppar: <span id="points">0</span></div>
+  </header>
+
+  <main>
+    <section id="search-section">
+      <div class="search-container">
+        <input type="text" id="nameInput" placeholder="Ditt namn (valfritt)" maxlength="20">
+        <input type="text" id="cityInput" placeholder="Skriv in din stad..." autocomplete="off">
+        <button id="clearButton" style="display: none;">✖</button>
+        <button id="searchButton">Upplev vädret</button>
+        <button id="geolocationButton"><i class="fas fa-map-marker-alt"></i> Min plats</button>
+      </div>
+      <div id="autocomplete"></div>
+      <div id="loading" class="loading" style="display: none;">Laddar...</div>
+    </section>
+
+    <section id="result-section">
+      <div id="weatherResult">
+        <i id="weatherIcon" class="fas"></i>
+        <span id="weatherText"></span>
+      </div>
+      <div id="forecast"></div>
+      <div id="social-share">
+        <button id="shareFacebook" class="social-btn facebook"><i class="fab fa-facebook"></i> Dela</button>
+        <button id="shareTwitter" class="social-btn twitter"><i class="fab fa-twitter"></i> Tweet</button>
+        <button id="shareInstagram" class="social-btn instagram"><i class="fab fa-instagram"></i> Dela</button>
+      </div>
+    </section>
+
+    <section id="challenge-section">
+      <h2>Dagens poetiska utmaning</h2>
+      <p id="dailyChallenge">Hur känns dagens väder för dig? Dela dina tankar!</p>
+      <textarea id="challengeResponse" placeholder="Skriv här..."></textarea>
+      <button id="submitChallenge">Skicka in</button>
+    </section>
+
+    <section id="favorites-section">
+      <h2>Dina favoritstäder</h2>
+      <div id="favoriteCities"></div>
+      <button id="saveFavorite">Spara som favorit</button>
+    </section>
+
+    <section id="community-section">
+      <h2>Dagens mest poetiska stad</h2>
+      <p id="topCity">Laddar...</p>
+    </section>
+
+    <section id="feedback-section">
+      <h2>Ge oss feedback</h2>
+      <form id="feedbackForm">
+        <textarea placeholder="Dina tankar om Väderpoesi..." required></textarea>
+        <button type="submit">Skicka</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <div id="ad-container">
+      <!-- Google AdSense placeholder -->
+      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-xxxxxxxxxxxxxxxx" data-ad-slot="xxxxxxxxxx" data-ad-format="auto"></ins>
+      <p>Annons: Upptäck våra fantastiska vädertjänster!</p>
+    </div>
+    <p>© 2025 Väderpoesi. Skapad för väderälskare. ☁️</p>
+    <a href="#" id="donateButton">Stöd oss med en donation</a>
+  </footer>
+
+  <div id="animationContainer"></div>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
