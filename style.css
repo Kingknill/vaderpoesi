@@ -1,123 +1,29 @@
-/* Grundläggande styling */
-body {
-  font-family: 'Poppins', sans-serif;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  transition: background 1s ease-in-out;
+:root {
+  --rain-color: white;
+  --cloud-color: rgba(255, 255, 255, 0.7);
+  --tooltip-bg-color: #333;
+  --tooltip-text-color: #fff;
+  --facebook-color: #1877F2;
+  --twitter-color: #1DA1F2;
+  --instagram-color: #E4405F;
+  --gradient-start: #3B82F6;
+  --gradient-end: #8B5CF6;
 }
 
-header {
-  padding: 1rem;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-bottom: 2px solid #ddd;
-  position: relative;
+body.sunny {
+  background: linear-gradient(to bottom, #FFD700, #FFA500);
 }
 
-h1 {
-  font-family: 'Merriweather', serif;
-  font-size: 2.5rem;
-  margin: 0;
+body.cloudy {
+  background: linear-gradient(to bottom, #B0C4DE, #778899);
 }
 
-#userPoints {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  font-size: 1rem;
-  color: #4a90e2;
+body.rainy {
+  background: linear-gradient(to bottom, #87CEEB, #4682B4);
 }
 
-/* Söksektion */
-.search-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 800px;
-  margin: 20px auto;
-  position: relative;
-  gap: 10px;
-}
-
-#nameInput, #cityInput {
-  padding: 12px;
-  font-size: 1.1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-#nameInput {
-  width: 150px;
-}
-
-#cityInput {
-  flex: 1;
-}
-
-#clearButton {
-  margin-left: 5px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-#searchButton, #geolocationButton, #saveFavorite, #submitChallenge {
-  padding: 12px 20px;
-  font-size: 1rem;
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#searchButton:hover, #geolocationButton:hover, #saveFavorite:hover, #submitChallenge:hover {
-  background-color: #357ab8;
-}
-
-#autocomplete {
-  position: absolute;
-  top: 100%;
-  left: 160px;
-  width: calc(100% - 160px);
-  max-width: 600px;
-  z-index: 10;
-  background: white;
-  border: 1px solid #ccc;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.autocomplete-item {
-  padding: 10px;
-  cursor: pointer;
-}
-
-.autocomplete-item:hover, .autocomplete-item.highlight {
-  background-color: #f0f0f0;
-}
-
-.loading {
-  margin-top: 10px;
-  font-size: 1rem;
-  color: #666;
-}
-
-/* Dynamisk bakgrund och animationer */
-.sunny { background: linear-gradient(to bottom, #FFD700, #FFA500); }
-.cloudy { background: linear-gradient(to bottom, #B0C4DE, #778899); }
-.rainy { background: linear-gradient(to bottom, #87CEEB, #4682B4); }
-.snowy { background: linear-gradient(to bottom, #FFFFFF, #E0E0E0); }
-
-#animationContainer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1;
-  pointer-events: none;
+body.snowy {
+  background: linear-gradient(to bottom, #FFFFFF, #E0E0E0);
 }
 
 @keyframes rain {
@@ -139,191 +45,170 @@ h1 {
   position: absolute;
   width: 3px;
   height: 10px;
-  background: white;
+  background: var(--rain-color);
   animation: rain 1s infinite linear;
 }
 
 .snowflake {
   position: absolute;
-  font-size: 1rem;
-  animation: snow 5s infinite linear;
+  color: var(--rain-color);
+  font-size: 2rem;
+  animation: snow 10s infinite linear;
 }
 
 .cloud-animation {
   position: absolute;
   font-size: 2rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--cloud-color);
   animation: cloud 20s infinite linear;
 }
 
-/* Resultatsektion */
-#weatherResult {
-  margin-top: 20px;
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding: 15px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  max-width: 80%;
-  background-color: rgba(255, 255, 255, 0.95);
-  color: #333;
+.animate-fade-in {
+  animation: fadeIn 1s ease-in;
 }
 
-#weatherIcon {
-  font-size: 2rem;
-  margin-right: 10px;
-}
-
-#forecast {
-  margin-top: 20px;
-  font-size: 1.2rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 10px;
-  border-radius: 10px;
-  display: inline-block;
-}
-
-/* Sociala delningsknappar */
-#social-share {
-  margin-top: 20px;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .social-btn {
-  border: none;
   padding: 10px 15px;
   font-size: 1rem;
-  margin: 5px;
   border-radius: 5px;
   cursor: pointer;
   color: white;
+  transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-.facebook { background-color: #1877F2; }
-.twitter { background-color: #1DA1F2; }
-.instagram { background-color: #E4405F; }
+.social-btn:hover {
+  transform: scale(1.05);
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 300px;
+  background-color: var(--tooltip-bg-color);
+  color: var(--tooltip-text-color);
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -150px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+.facebook { background-color: var(--facebook-color); }
+.twitter { background-color: var(--twitter-color); }
+.instagram { background-color: var(--instagram-color); }
 
 .facebook:hover { background-color: #1256A0; }
 .twitter:hover { background-color: #1177BB; }
 .instagram:hover { background-color: #C13584; }
 
-/* Utmaningssektion */
-#challenge-section {
-  margin: 40px auto;
-  max-width: 600px;
+.card {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-#challengeResponse {
-  width: 80%;
-  max-width: 400px;
-  padding: 10px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  resize: vertical;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
-/* Favoritstäder */
-#favorites-section {
-  margin: 40px auto;
-  max-width: 600px;
+.gradient-text {
+  background: linear-gradient(45deg, var(--gradient-start), var(--gradient-end));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-#favoriteCities {
-  margin-top: 10px;
-}
-
-.favorite-city {
-  display: inline-block;
-  padding: 8px 12px;
-  margin: 5px;
-  background-color: #f0f0f0;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.favorite-city:hover {
-  background-color: #e0e0e0;
-}
-
-/* Community-sektion */
-#community-section {
-  margin: 40px auto;
-  max-width: 600px;
-}
-
-/* Feedback-sektion */
-#feedback-section {
-  margin: 40px auto;
-  max-width: 600px;
-}
-
-#feedbackForm textarea {
-  width: 80%;
-  max-width: 400px;
-  padding: 10px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  resize: vertical;
-}
-
-#feedbackForm button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#feedbackForm button:hover {
-  background-color: #357ab8;
-}
-
-/* Footer */
-footer {
-  background-color: #f8f8f8;
-  padding: 1rem;
-  margin-top: 2rem;
-}
-
-#ad-container {
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  border: 1px dashed #ccc;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-#donateButton {
-  color: #4a90e2;
-  text-decoration: none;
-}
-
-#donateButton:hover {
-  text-decoration: underline;
-}
-
-/* Media queries */
 @media (max-width: 768px) {
   .search-container {
     flex-direction: column;
-    gap: 10px;
   }
-  #nameInput, #cityInput, #searchButton, #geolocationButton {
-    width: 100%;
-    margin-left: 0;
+  
+  .card {
+    margin: 10px;
   }
-  #autocomplete {
-    left: 0;
-    width: 100%;
+  
+  .premium-features {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 600px) {
-  #weatherResult, #forecast {
-    max-width: 95%;
-  }
+/* Parallax effect for background */
+.parallax {
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Weather-specific backgrounds */
+body.sunny::before {
+  content: url('https://images.unsplash.com/photo-1506748686214-e9df15f7c5e0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+body.cloudy::before {
+  content: url('https://images.unsplash.com/photo-1513001900722-370f803f498d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+body.rainy::before {
+  content: url('https://images.unsplash.com/photo-1519699047748-de8e457a634e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+body.snowy::before {
+  content: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  opacity: 0.3;
+  z-index: -1;
 }

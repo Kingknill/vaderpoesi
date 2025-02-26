@@ -1,362 +1,389 @@
-console.log("Script.js laddades!");
+const translations = {
+  sv: {
+    title: "Väderpoesi – Upplev vädret med poesi",
+    placeholderName: "Ditt namn (för personlig poesi)",
+    placeholderCity: "Skriv in din stad...",
+    moodSelect: "Välj humör (valfritt)",
+    moodOptions: ["Glad", "Melankolisk", "Inspirerad", "Romantisk", "Energetisk"],
+    searchButton: "Upplev vädret",
+    geolocationButton: "Min plats",
+    loading: "Laddar...",
+    commentsTitle: "Dela dina tankar",
+    commentPlaceholder: "Skriv din kommentar...",
+    submitComment: "Skicka",
+    subscribeTitle: "Prenumerera på dagliga väderpoesi-uppdateringar",
+    subscribePlaceholder: "Din e-postadress",
+    subscribeButton: "Prenumerera",
+    footer: "© 2025 Väderpoesi. Skapad för väderälskare. ☁️",
+    privacy: "Sekretesspolicy",
+    donate: "Stöd oss med en donation",
+    errorNoCity: "Vänligen ange en stad!",
+    premiumText: "Bli Premium-medlem",
+    premiumDescription: "Få ad-free upplevelse, dagliga personliga poesirapporter och exklusiva funktioner för bara 5€/månad!"
+  },
+  en: {
+    title: "Weather Poetry – Experience the weather with poetry",
+    placeholderName: "Your name (for personal poetry)",
+    placeholderCity: "Enter your city...",
+    moodSelect: "Select mood (optional)",
+    moodOptions: ["Happy", "Melancholic", "Inspired", "Romantic", "Energetic"],
+    searchButton: "Experience the weather",
+    geolocationButton: "My location",
+    loading: "Loading...",
+    commentsTitle: "Share your thoughts",
+    commentPlaceholder: "Write your comment...",
+    submitComment: "Submit",
+    subscribeTitle: "Subscribe to daily weather poetry updates",
+    subscribePlaceholder: "Your email address",
+    subscribeButton: "Subscribe",
+    footer: "© 2025 Weather Poetry. Created for weather lovers. ☁️",
+    privacy: "Privacy Policy",
+    donate: "Support us with a donation",
+    errorNoCity: "Please enter a city!",
+    premiumText: "Become a Premium Member",
+    premiumDescription: "Get an ad-free experience, daily personal poetry reports, and exclusive features for just $5/month!"
+  }
+};
 
-// Globala variabler
-let suggestionIndex = -1;
 const cityInput = document.getElementById("cityInput");
 const nameInput = document.getElementById("nameInput");
+const moodSelect = document.getElementById("moodSelect");
 const autocompleteDiv = document.getElementById("autocomplete");
-const clearButton = document.getElementById("clearButton");
 const weatherText = document.getElementById("weatherText");
 const weatherIcon = document.getElementById("weatherIcon");
 const forecastDiv = document.getElementById("forecast");
 const animationContainer = document.getElementById("animationContainer");
 const loadingIndicator = document.getElementById("loading");
-const favoriteCitiesDiv = document.getElementById("favoriteCities");
-const pointsDisplay = document.getElementById("points");
-const challengeResponse = document.getElementById("challengeResponse");
-const topCityDisplay = document.getElementById("topCity");
-let currentCity = "";
-let userPoints = parseInt(localStorage.getItem("poesiPoints")) || 0;
+const languageSelect = document.getElementById("languageSelect");
+const darkModeToggle = document.getElementById("darkModeToggle");
+const commentInput = document.getElementById("commentInput");
+const commentsDiv = document.getElementById("comments");
+const subscribeForm = document.getElementById("subscribeForm");
+const premiumButton = document.getElementById("premiumButton");
+let currentLanguage = "sv";
 
-// Initial setup
-pointsDisplay.textContent = userPoints;
+languageSelect.addEventListener("change", (e) => {
+  currentLanguage = e.target.value;
+  updateLanguage();
+});
 
-// Autocomplete
-async function fetchCitySuggestions(query) {
-  try {
-    const response = await fetch(`/autocomplete?q=${query}`);
-    return await response.json();
-  } catch (error) {
-    console.error("Fel vid hämtning av stadssökning:", error);
-    return [];
-  }
+darkModeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+});
+
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
 }
 
-cityInput.addEventListener("input", async () => {
-  const query = cityInput.value.trim();
-  clearButton.style.display = query ? "block" : "none";
-  autocompleteDiv.innerHTML = "";
-  suggestionIndex = -1;
-
-  if (query.length < 2) {
-    autocompleteDiv.style.display = "none";
-    return;
-  }
-
-  const suggestions = await fetchCitySuggestions(query);
-  if (suggestions.length > 0) {
-    suggestions.forEach(city => {
-      const div = document.createElement("div");
-      div.textContent = city.name;
-      div.classList.add("autocomplete-item");
-      div.addEventListener("click", () => {
-        cityInput.value = city.name;
-        autocompleteDiv.innerHTML = "";
-        autocompleteDiv.style.display = "none";
-      });
-      autocompleteDiv.appendChild(div);
-    });
-    autocompleteDiv.style.display = "block";
-  } else {
-    autocompleteDiv.style.display = "none";
-  }
-});
-
-cityInput.addEventListener("keydown", (e) => {
-  const items = autocompleteDiv.querySelectorAll(".autocomplete-item");
-  if (items.length === 0) return;
-
-  if (e.key === "ArrowDown") {
-    suggestionIndex++;
-    if (suggestionIndex >= items.length) suggestionIndex = 0;
-    highlightSuggestion(items, suggestionIndex);
-    e.preventDefault();
-  } else if (e.key === "ArrowUp") {
-    suggestionIndex--;
-    if (suggestionIndex < 0) suggestionIndex = items.length - 1;
-    highlightSuggestion(items, suggestionIndex);
-    e.preventDefault();
-  } else if (e.key === "Enter" && suggestionIndex > -1) {
-    items[suggestionIndex].click();
-    suggestionIndex = -1;
-    e.preventDefault();
-  }
-});
-
-function highlightSuggestion(items, index) {
-  items.forEach((item, i) => {
-    item.classList.toggle("highlight", i === index);
-  });
-}
-
-document.addEventListener("click", (e) => {
-  if (!autocompleteDiv.contains(e.target) && e.target !== cityInput) {
-    autocompleteDiv.style.display = "none";
-  }
-});
-
-// Rensa sökfältet
-clearButton.addEventListener("click", () => {
-  cityInput.value = "";
-  autocompleteDiv.style.display = "none";
-  clearButton.style.display = "none";
-});
-
-// Geolokalisering
-document.getElementById("geolocationButton").addEventListener("click", () => {
-  loadingIndicator.style.display = "block";
-  navigator.geolocation.getCurrentPosition(async (position) => {
-    const { latitude, longitude } = position.coords;
-    try {
-      const weatherResponse = await fetch(`/weather?lat=${latitude}&lon=${longitude}`);
-      const weatherData = await weatherResponse.json();
-      if (weatherResponse.ok) {
-        currentCity = weatherData.city;
-        await displayWeather(weatherData);
-        updatePoints(10, "sökte väder med plats");
-      } else {
-        weatherText.innerHTML = `<p>Kunde inte hämta väderdata för din position.</p>`;
-      }
-    } catch (error) {
-      console.error("Fel vid geolokalisering:", error);
-      alert("Ett fel inträffade vid hämtning av väderdata.");
-    } finally {
-      loadingIndicator.style.display = "none";
+cityInput.addEventListener(
+  "input",
+  debounce(async () => {
+    const query = cityInput.value.trim();
+    if (query.length < 2) {
+      autocompleteDiv.innerHTML = "";
+      return;
     }
-  }, () => {
-    alert("Kunde inte hämta din position. Kontrollera att du har tillåtit platsåtkomst.");
-    loadingIndicator.style.display = "none";
-  });
-});
+    const suggestions = await fetchCitySuggestions(query);
+    autocompleteDiv.innerHTML = suggestions
+      .map(
+        (city) =>
+          `<div class="p-2 cursor-pointer hover:bg-gray-200" data-city="${city.name}">${city.name}, ${city.country}</div>`
+      )
+      .join("");
+    autocompleteDiv.querySelectorAll("div").forEach((div) => {
+      div.addEventListener("click", () => {
+        cityInput.value = div.getAttribute("data-city");
+        autocompleteDiv.innerHTML = "";
+      });
+    });
+  }, 300)
+);
 
-// Hämta och visa väder
 document.getElementById("searchButton").addEventListener("click", async () => {
   const city = cityInput.value.trim();
+  const name = nameInput.value.trim();
+  const mood = moodSelect.value;
+
   if (!city) {
-    alert("Ange en stad!");
+    alert(translations[currentLanguage].errorNoCity);
     return;
   }
+
   loadingIndicator.style.display = "block";
   try {
-    const weatherResponse = await fetch(`/weather?city=${city}`);
-    const weatherData = await weatherResponse.json();
-    if (!weatherResponse.ok) {
-      weatherText.innerHTML = `<p>Vi kunde inte hitta staden. Kontrollera stavningen eller prova en annan stad.</p><p>Populära städer: Stockholm, Göteborg, Malmö</p>`;
-      throw new Error(weatherData.error);
+    const weatherData = await (
+      await fetch(`/weather?city=${encodeURIComponent(city)}`)
+    ).json();
+    if (!weatherData || weatherData.error) {
+      alert(translations[currentLanguage].errorNoCity);
+      return;
     }
-    currentCity = city;
-    await displayWeather(weatherData);
-    updatePoints(10, "sökte väder");
+    const forecastData = await (
+      await fetch(`/forecast?city=${encodeURIComponent(city)}`)
+    ).json();
+    const aiResponse = await fetch("/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        weather: weatherData.weather,
+        temp: weatherData.temp,
+        name,
+        mood,
+        language: currentLanguage,
+      }),
+    });
+    const aiData = await aiResponse.json();
+    weatherText.innerText = aiData.emotion;
+    setWeatherIcon(weatherData.weather);
+    updateBackground(weatherData.weather);
+    displayForecast(forecastData);
+    addWeatherAnimations(weatherData.weather);
   } catch (error) {
     console.error("Fel:", error);
-    alert("Ett fel inträffade, försök igen.");
+    weatherText.innerText = "Ett fel uppstod, försök igen!";
   } finally {
     loadingIndicator.style.display = "none";
   }
 });
 
-async function displayWeather(weatherData) {
-  const { weather, temp, city } = weatherData;
-  const userName = nameInput.value.trim();
-  updateBackground(weather);
+document.getElementById("submitComment").addEventListener("click", async () => {
+  const comment = commentInput.value.trim();
+  if (comment) {
+    try {
+      const response = await fetch("/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        loadComments();
+        commentInput.value = "";
+        alert("Tack för din kommentar!");
+      }
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+      alert("Kunde inte skicka kommentar, försök igen.");
+    }
+  }
+});
 
-  const aiResponse = await fetch('/generate', {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ weather, temp, name: userName })
+async function loadComments() {
+  try {
+    const response = await fetch("/comments");
+    const comments = await response.json();
+    commentsDiv.innerHTML = comments
+      .map(
+        (c) =>
+          `<div class="bg-gray-100 dark:bg-gray-700 p-2 rounded shadow-md">${c.text}</div>`
+      )
+      .join("");
+  } catch (error) {
+    console.error("Error loading comments:", error);
+  }
+}
+
+loadComments();
+
+subscribeForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("subscribeEmail").value;
+  try {
+    const response = await fetch("/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await response.json();
+    alert(data.message || "Tack för din prenumeration!");
+    subscribeForm.reset();
+  } catch (error) {
+    console.error("Error subscribing:", error);
+    alert("Kunde inte prenumerera, försök igen.");
+  }
+});
+
+document.getElementById("geolocationButton").addEventListener("click", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const response = await fetch(
+            `/geocode?lat=${latitude}&lon=${longitude}`
+          );
+          const data = await response.json();
+          if (data && data.length > 0) {
+            cityInput.value = data[0].name;
+            document.getElementById("searchButton").click();
+          } else {
+            alert(translations[currentLanguage].errorNoCity);
+          }
+        } catch (error) {
+          console.error("Fel vid hämtning av plats:", error);
+          alert("Kunde inte hämta plats. Försök igen.");
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        alert(
+          "Kunde inte hämta plats. Se till att platsdelning är aktiverat."
+        );
+      }
+    );
+  } else {
+    alert("Geolocation stöds inte av din webbläsare.");
+  }
+});
+
+document.getElementById("shareFacebook").addEventListener("click", () => {
+  const text = encodeURIComponent(weatherText.innerText);
+  window.open(
+    `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      window.location.href
+    )}&quote=${text}`,
+    "_blank"
+  );
+});
+
+document.getElementById("shareTwitter").addEventListener("click", () => {
+  const text = encodeURIComponent(weatherText.innerText);
+  window.open(
+    `https://twitter.com/intent/tweet?text=${text} - Skapad av Väderpoesi`,
+    "_blank"
+  );
+});
+
+document.getElementById("shareInstagram").addEventListener("click", () => {
+  html2canvas(document.getElementById("weatherResult")).then((canvas) => {
+    const link = document.createElement("a");
+    link.download = "vaderpoesi.png";
+    link.href = canvas.toDataURL();
+    link.click();
+    alert("Bilden har laddats ner! Dela den på Instagram manuellt.");
   });
-  const aiData = await aiResponse.json();
-  weatherText.innerText = aiData.emotion || "Inget svar från AI.";
-  setWeatherIcon(weather);
+});
 
-  const forecastResponse = await fetch(`/forecast?city=${city}`);
-  const forecastData = await forecastResponse.json();
-  forecastDiv.innerHTML = forecastData.map(day => `<p>${day.date}: ${day.weather}, ${day.temp}°C</p>`).join("");
+document.getElementById("premiumButton").addEventListener("click", () => {
+  alert(
+    translations[currentLanguage].premiumDescription +
+      " Klicka här för att gå till betalningssidan snart!"
+  );
+  // Implementera betalningsintegration (t.ex. Stripe) i framtiden
+});
 
-  activateShareButtons(city, aiData.emotion);
-  updateFavoriteCities();
-  updateTopCity(city);
-  updateDailyChallenge(weather);
-}
-
-// Dynamisk bakgrund och animationer
-function updateBackground(weather) {
-  clearEffects();
-  let lowerWeather = weather.toLowerCase();
-  document.body.classList.remove("sunny", "cloudy", "rainy", "snowy");
-
-  if (lowerWeather.includes("sol") || lowerWeather.includes("clear")) {
-    document.body.classList.add("sunny");
-  } else if (lowerWeather.includes("moln") || lowerWeather.includes("cloud")) {
-    document.body.classList.add("cloudy");
-    addCloudEffect();
-  } else if (lowerWeather.includes("regn") || lowerWeather.includes("rain")) {
-    document.body.classList.add("rainy");
-    addRainEffect();
-  } else if (lowerWeather.includes("snö") || lowerWeather.includes("snow")) {
-    document.body.classList.add("snowy");
-    addSnowEffect();
-  }
-}
-
-function clearEffects() {
-  animationContainer.innerHTML = "";
-  document.body.className = "";
-}
-
-function addRainEffect() {
-  for (let i = 0; i < 30; i++) {
-    let drop = document.createElement("div");
-    drop.classList.add("rain-animation");
-    drop.style.left = Math.random() * 100 + "vw";
-    drop.style.animationDuration = Math.random() * 1 + 0.5 + "s";
-    animationContainer.appendChild(drop);
-  }
-}
-
-function addSnowEffect() {
-  for (let i = 0; i < 20; i++) {
-    let snowflake = document.createElement("div");
-    snowflake.innerHTML = "❄";
-    snowflake.classList.add("snowflake");
-    snowflake.style.left = Math.random() * 100 + "vw";
-    snowflake.style.fontSize = Math.random() * 1 + 1 + "rem";
-    snowflake.style.animationDuration = Math.random() * 5 + 2 + "s";
-    animationContainer.appendChild(snowflake);
-  }
-}
-
-function addCloudEffect() {
-  for (let i = 0; i < 5; i++) {
-    let cloud = document.createElement("div");
-    cloud.innerHTML = "☁️";
-    cloud.classList.add("cloud-animation");
-    cloud.style.left = Math.random() * 100 + "vw";
-    cloud.style.top = Math.random() * 20 + "vh";
-    cloud.style.animationDuration = Math.random() * 20 + 10 + "s";
-    animationContainer.appendChild(cloud);
-  }
+async function fetchCitySuggestions(query) {
+  const response = await fetch(`/geocode?query=${encodeURIComponent(query)}`);
+  const data = await response.json();
+  return data.map((city) => ({
+    name: city.name,
+    country: city.country,
+  }));
 }
 
 function setWeatherIcon(weather) {
-  weatherIcon.className = "fas";
-  if (weather.includes("sol")) weatherIcon.classList.add("fa-sun");
-  else if (weather.includes("moln")) weatherIcon.classList.add("fa-cloud");
-  else if (weather.includes("regn")) weatherIcon.classList.add("fa-cloud-showers-heavy");
-  else if (weather.includes("snö")) weatherIcon.classList.add("fa-snowflake");
-  else weatherIcon.classList.add("fa-question");
-}
-
-// Sociala medier delning
-function activateShareButtons(city, emotion) {
-  const poeticShareText = `Vädret i ${city} viskar poesi: "${emotion}" – Upplev det med Väderpoesi!`;
-
-  document.getElementById("shareFacebook").onclick = () => {
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(poeticShareText)}`, '_blank');
-    updatePoints(20, "delade på Facebook");
+  const icons = {
+    clear: "fa-sun",
+    clouds: "fa-cloud",
+    rain: "fa-cloud-rain",
+    snow: "fa-snowflake",
   };
-
-  document.getElementById("shareTwitter").onclick = () => {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(poeticShareText)}`, '_blank');
-    updatePoints(20, "delade på Twitter");
-  };
-
-  document.getElementById("shareInstagram").onclick = () => {
-    html2canvas(document.getElementById("weatherResult")).then(canvas => {
-      const link = document.createElement("a");
-      link.download = "vaderpoesi.png";
-      link.href = canvas.toDataURL();
-      link.click();
-      updatePoints(20, "delade på Instagram");
-    });
-  };
+  weatherIcon.className = `fas text-4xl mb-2 ${
+    icons[weather.toLowerCase()] || "fa-cloud"
+  }`;
 }
 
-// Poängsystem
-function updatePoints(amount, action) {
-  userPoints += amount;
-  pointsDisplay.textContent = userPoints;
-  localStorage.setItem("poesiPoints", userPoints);
-  console.log(`Tjänade ${amount} Poesi-droppar för att ${action}`);
+function updateBackground(weather) {
+  document.body.className = `transition-all duration-300 ${
+    weather.toLowerCase()
+  }${document.body.classList.contains("dark") ? " dark" : ""}`;
 }
 
-// Favoritstäder
-function updateFavoriteCities() {
-  const favorites = JSON.parse(localStorage.getItem("favoriteCities") || "[]");
-  favoriteCitiesDiv.innerHTML = "";
-  favorites.forEach(city => {
-    const div = document.createElement("div");
-    div.textContent = city;
-    div.classList.add("favorite-city");
-    div.addEventListener("click", () => {
-      cityInput.value = city;
-      document.getElementById("searchButton").click();
-    });
-    favoriteCitiesDiv.appendChild(div);
-  });
-}
-
-document.getElementById("saveFavorite").addEventListener("click", () => {
-  if (!currentCity) {
-    alert("Sök efter en stad först!");
-    return;
+function addWeatherAnimations(weather) {
+  animationContainer.innerHTML = "";
+  if (weather.toLowerCase() === "rain") {
+    for (let i = 0; i < 50; i++) {
+      const drop = document.createElement("div");
+      drop.className = "rain-animation";
+      drop.style.left = `${Math.random() * 100}vw`;
+      drop.style.animationDelay = `${Math.random() * 2}s`;
+      animationContainer.appendChild(drop);
+    }
+  } else if (weather.toLowerCase() === "snow") {
+    for (let i = 0; i < 30; i++) {
+      const flake = document.createElement("div");
+      flake.className = "snowflake";
+      flake.innerHTML = "❄";
+      flake.style.left = `${Math.random() * 100}vw`;
+      flake.style.animationDelay = `${Math.random() * 5}s`;
+      animationContainer.appendChild(flake);
+    }
+  } else if (weather.toLowerCase() === "clouds") {
+    for (let i = 0; i < 5; i++) {
+      const cloud = document.createElement("div");
+      cloud.className = "cloud-animation";
+      cloud.innerHTML = "☁";
+      cloud.style.top = `${Math.random() * 50}vh`;
+      cloud.style.left = `${Math.random() * 100}vw`;
+      cloud.style.animationDelay = `${Math.random() * 20}s`;
+      animationContainer.appendChild(cloud);
+    }
   }
-  const favorites = JSON.parse(localStorage.getItem("favoriteCities") || "[]");
-  if (!favorites.includes(currentCity)) {
-    favorites.push(currentCity);
-    localStorage.setItem("favoriteCities", JSON.stringify(favorites));
-    updateFavoriteCities();
-    alert(`${currentCity} har sparats som favorit!`);
-    updatePoints(15, "sparade en favoritstad");
-  } else {
-    alert("Denna stad är redan en favorit!");
-  }
-});
-
-// Daglig utmaning
-function updateDailyChallenge(weather) {
-  const challenges = {
-    sol: "Hur värmer solen ditt hjärta idag?",
-    moln: "Vad döljer sig bakom dagens moln för dig?",
-    regn: "Hur känns regnet mot din själ idag?",
-    snö: "Vad viskar snöflingorna till dig?"
-  };
-  const weatherKey = Object.keys(challenges).find(key => weather.toLowerCase().includes(key)) || "default";
-  document.getElementById("dailyChallenge").textContent = challenges[weatherKey] || "Hur känns dagens väder för dig?";
 }
 
-document.getElementById("submitChallenge").addEventListener("click", () => {
-  const response = challengeResponse.value.trim();
-  if (response) {
-    console.log("Utmaningssvar:", response);
-    alert("Tack för att du delade din poesi! Här är 25 Poesi-droppar.");
-    updatePoints(25, "svarade på dagens utmaning");
-    challengeResponse.value = "";
-  } else {
-    alert("Skriv något poetiskt först!");
-  }
-});
-
-// Community: Dagens mest poetiska stad (mock data)
-async function updateTopCity(city) {
-  const storedData = JSON.parse(localStorage.getItem("cityStats") || "{}");
-  storedData[city] = (storedData[city] || 0) + 1;
-  localStorage.setItem("cityStats", JSON.stringify(storedData));
-
-  const topCity = Object.entries(storedData).sort((a, b) => b[1] - a[1])[0];
-  topCityDisplay.textContent = topCity ? `${topCity[0]} (${topCity[1]} sökningar)` : "Ingen data än";
+function displayForecast(data) {
+  forecastDiv.innerHTML = data
+    .map(
+      (day) => `
+      <div class="bg-white dark:bg-gray-800 p-2 rounded shadow-md text-center card">
+        <p class="font-bold">${day.date}</p>
+        <i class="fas ${
+          day.weather === "clear" ? "fa-sun" : "fa-cloud"
+        } text-2xl"></i>
+        <p>${day.temp}°C</p>
+      </div>
+    `
+    )
+    .join("");
 }
 
-// Feedback-formulär
-document.getElementById("feedbackForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const feedback = e.target.querySelector("textarea").value;
-  console.log("Feedback:", feedback);
-  alert("Tack för din feedback! Här är 15 Poesi-droppar som tack.");
-  updatePoints(15, "gav feedback");
-  e.target.reset();
-});
+function updateLanguage() {
+  const translation = translations[currentLanguage];
+  document.title = translation.title;
+  document.getElementById("nameInput").placeholder = translation.placeholderName;
+  document.getElementById("cityInput").placeholder = translation.placeholderCity;
+  document.getElementById("moodSelect").options[0].text =
+    translation.moodSelect;
+  for (let i = 1; i < moodSelect.options.length; i++) {
+    moodSelect.options[i].text = translation.moodOptions[i - 1];
+  }
+  document.getElementById("searchButton").innerText = translation.searchButton;
+  document.getElementById("geolocationButton").innerText =
+    translation.geolocationButton;
+  document.getElementById("loading").innerText = translation.loading;
+  document.querySelector("#comments-section h2").innerText =
+    translation.commentsTitle;
+  document.getElementById("commentInput").placeholder =
+    translation.commentPlaceholder;
+  document.getElementById("submitComment").innerText = translation.submitComment;
+  document.querySelector("#subscribe-section h2").innerText =
+    translation.subscribeTitle;
+  document.getElementById("subscribeEmail").placeholder =
+    translation.subscribePlaceholder;
+  document.getElementById("subscribeForm button").innerText =
+    translation.subscribeButton;
+  document.querySelector("footer p").innerText = translation.footer;
+  document.querySelector("footer a[href='/privacy']").innerText =
+    translation.privacy;
+  document.getElementById("donateButton").innerText = translation.donate;
+  document.querySelector("#premium-section h2").innerText =
+    translation.premiumText;
+  document.querySelector("#premium-section p").innerText =
+    translation.premiumDescription;
+}
 
-// Ladda initiala värden
-updateFavoriteCities();
-updateTopCity("");
+updateLanguage();
