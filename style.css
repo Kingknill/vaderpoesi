@@ -10,6 +10,13 @@
   --gradient-end: #8B5CF6;
 }
 
+/* Ljust läge */
+body {
+  background-color: #f0f0f0; /* Ljus bakgrund */
+  color: #333; /* Mörk text */
+}
+
+/* Väderbaserade bakgrunder */
 body.sunny {
   background: linear-gradient(to bottom, #FFD700, #FFA500);
 }
@@ -26,6 +33,38 @@ body.snowy {
   background: linear-gradient(to bottom, #FFFFFF, #E0E0E0);
 }
 
+/* Mörkt läge */
+body.dark {
+  background-color: #333; /* Mörk bakgrund */
+  color: #f0f0f0; /* Ljus text */
+}
+
+/* Knappar och sociala knappar */
+button, .social-btn {
+  background-color: #4a90e2; /* Blå knapp */
+  color: white; /* Vit text */
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Hover-effekter för knappar */
+button:hover, .social-btn:hover {
+  background-color: #357ab8; /* Mörkare blå vid hover */
+}
+
+/* Mörkt läge för knappar och kort */
+body.dark button, body.dark .social-btn {
+  background-color: #357ab8; /* Mörkare blå knapp */
+  color: white;
+}
+
+body.dark .card {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f0f0f0;
+}
+
+/* Animationer */
 @keyframes rain {
   0% { transform: translateY(-10px); opacity: 1; }
   100% { transform: translateY(100vh); opacity: 0; }
@@ -128,6 +167,22 @@ body.snowy {
   padding: 20px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Väderbeskrivning */
+#weatherText {
+  color: #333; /* Mörk text i ljust läge */
+}
+body.dark #weatherText {
+  color: #f0f0f0; /* Ljus text i mörkt läge */
+}
+
+/* Kommentarer */
+#comments div {
+  color: #333;
+}
+body.dark #comments div {
+  color: #f0f0f0;
 }
 
 .card:hover {
