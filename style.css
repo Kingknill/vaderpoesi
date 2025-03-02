@@ -160,55 +160,159 @@ body.dark .card {
 .instagram:hover { background-color: #C13584; }
 
 .card {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
   padding: 20px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Väderbeskrivning */
-#weatherText {
-  color: #333; /* Mörk text i ljust läge */
-}
-body.dark #weatherText {
-  color: #f0f0f0; /* Ljus text i mörkt läge */
-}
-
-/* Kommentarer */
-#comments div {
-  color: #333;
-}
-body.dark #comments div {
-  color: #f0f0f0;
-}
-
+/* Förbättrade hover-effekter */
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
-.gradient-text {
-  background: linear-gradient(45deg, var(--gradient-start), var(--gradient-end));
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Mikro-interaktioner för knappar */
+button, .social-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
+button:after, .social-btn:after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+button:focus:not(:active)::after, .social-btn:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* Förbättrad dark mode toggle med animation */
+#darkModeToggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+#darkModeToggle:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+body.dark #darkModeToggle i {
+  transform: rotate(360deg);
+}
+
+#darkModeToggle i {
+  transition: transform 0.5s ease;
+}
+
+/* Skeuomorfism för väderikoner */
+#weatherIcon {
+  filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.2));
+  font-size: 3rem;
+  background: linear-gradient(145deg, rgba(255,255,255,0.2), rgba(0,0,0,0.1));
+  padding: 15px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-bottom: 15px;
+}
+
+/* Förbättrad läsbarhet för vädertext */
+#weatherText {
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+  text-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+  font-weight: 500;
+}
+
+/* Responsiv anpassning för mobila enheter */
 @media (max-width: 768px) {
-  .search-container {
-    flex-direction: column;
+  #weatherIcon {
+    font-size: 2.5rem;
+    padding: 10px;
   }
   
   .card {
-    margin: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
   }
   
-  .premium-features {
-    grid-template-columns: 1fr;
+  h1 {
+    font-size: 1.8rem !important;
   }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Förbättrade formulärfält */
+input, select, textarea {
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--gradient-start);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Förbättrat autocomplete-utseende */
+#autocomplete div {
+  padding: 10px;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+#autocomplete div:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid var(--gradient-start);
+}
+
+/* Skrolla animation för kommentarer */
+#comments div {
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+#comments div:hover {
+  border-left: 3px solid var(--gradient-start);
+  transform: translateX(5px);
 }
 
 /* Parallax effect for background */
