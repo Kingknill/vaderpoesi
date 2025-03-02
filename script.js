@@ -1,513 +1,256 @@
-const translations = {
-  sv: {
-  title: "Väderpoesi – Upplev vädret med poesi",
-  placeholderName: "Ditt namn (för personlig poesi)",
-  placeholderCity: "Skriv in din stad...",
-  moodSelect: "Välj humör (valfritt)",
-  moodOptions: ["Glad", "Melankolisk", "Inspirerad", "Romantisk", "Energetisk"],
-  searchButton: "Upplev vädret",
-  geolocationButton: "Min plats",
-  loading: "Laddar...",
-  commentsTitle: "Dela dina tankar",
-  commentPlaceholder: "Skriv din kommentar...",
-  submitComment: "Skicka",
-  subscribeTitle: "Prenumerera på dagliga väderpoesi-uppdateringar",
-  subscribePlaceholder: "Din e-postadress",
-  subscribeButton: "Prenumerera",
-  footer: "© 2025 Väderpoesi. Skapad för väderälskare. ☁️",
-  privacy: "Sekretesspolicy",
-  donate: "Stöd oss med en donation",
-  errorNoCity: "Vänligen ange en stad!",
-  premiumText: "Bli Premium-medlem",
-  premiumDescription: "Få ad-free upplevelse, dagliga personliga poesirapporter och exklusiva funktioner för bara 5€/månad!"
-  },
-  en: {
-  title: "Weather Poetry – Experience the weather with poetry",
-  placeholderName: "Your name (for personal poetry)",
-  placeholderCity: "Enter your city...",
-  moodSelect: "Select mood (optional)",
-  moodOptions: ["Happy", "Melancholic", "Inspired", "Romantic", "Energetic"],
-  searchButton: "Experience the weather",
-  geolocationButton: "My location",
-  loading: "Loading...",
-  commentsTitle: "Share your thoughts",
-  commentPlaceholder: "Write your comment...",
-  submitComment: "Submit",
-  subscribeTitle: "Subscribe to daily weather poetry updates",
-  subscribePlaceholder: "Your email address",
-  subscribeButton: "Subscribe",
-  footer: "© 2025 Weather Poetry. Created for weather lovers. ☁️",
-  privacy: "Privacy Policy",
-  donate: "Support us with a donation",
-  errorNoCity: "Please enter a city!",
-  premiumText: "Become a Premium Member",
-  premiumDescription: "Get an ad-free experience, daily personal poetry reports, and exclusive features for just $5/month!"
-  }
- };
- 
- const cityInput = document.getElementById("cityInput");
- const nameInput = document.getElementById("nameInput");
- const moodSelect = document.getElementById("moodSelect");
- const autocompleteDiv = document.getElementById("autocomplete");
- const weatherText = document.getElementById("weatherText");
- const weatherIcon = document.getElementById("weatherIcon");
- const forecastDiv = document.getElementById("forecast");
- const animationContainer = document.getElementById("animationContainer");
- const loadingIndicator = document.getElementById("loading");
- const languageSelect = document.getElementById("languageSelect");
- const darkModeToggle = document.getElementById("darkModeToggle");
- const commentInput = document.getElementById("commentInput");
- const commentsDiv = document.getElementById("comments");
- const subscribeForm = document.getElementById("subscribeForm");
- const premiumButton = document.getElementById("premiumButton");
- let currentLanguage = "sv";
- 
- // Språkväxling
- languageSelect.addEventListener("change", (e) => {
-  currentLanguage = e.target.value;
-  updateLanguage();
- });
- 
- // Mörkt läge
- darkModeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
- });
- 
- // Debounce för att minska API-anrop vid autocomplete
- function debounce(func, wait) {
-  let timeout;
-  return function (...args) {
-  clearTimeout(timeout);
-  timeout = setTimeout(() => func.apply(this, args), wait);
-  };
- }
- 
- // Autocomplete för städer
- cityInput.addEventListener(
-  "input",
-  debounce(async () => {
-  const query = cityInput.value.trim();
-  if (query.length < 2) {
-  autocompleteDiv.innerHTML = "";
-  return;
-  }
-  const suggestions = await fetchCitySuggestions(query);
-  if (suggestions.length === 0) {
-  autocompleteDiv.innerHTML = `<div class="p-2 text-gray-500">Inga städer hittades för "${query}"</div>`;
-  return;
-  }
-  autocompleteDiv.innerHTML = suggestions
-  .map(
-  (city) =>
-  `<div class="p-2 cursor-pointer hover:bg-gray-200" data-city="${city.name}">${city.name}, ${city.country}</div>`
-  )
-  .join("");
-  autocompleteDiv.querySelectorAll("div").forEach((div) => {
-  div.addEventListener("click", () => {
-  cityInput.value = div.getAttribute("data-city");
-  autocompleteDiv.innerHTML = "";
-  });
-  });
-  }, 300)
- );
- 
- // Sök väder
- document.getElementById("searchButton").addEventListener("click", async () => {
-  const city = cityInput.value.trim();
-  if (!city) {
-  alert(translations[currentLanguage].errorNoCity);
-  return;
-  }
-  loadingIndicator.style.display = "block";
-  try {
-  const weatherResponse = await fetch(`/weather?city=${encodeURIComponent(city)}`);
-  if (!weatherResponse.ok) {
-  throw new Error(`Fel vid väderhämtning: ${weatherResponse.status} ${weatherResponse.statusText}`);
-  }
-  const weatherData = await weatherResponse.json();
-  if (weatherData.error) {
-  alert(weatherData.error);
-  return;
-  }
-  const forecastResponse = await fetch(`/forecast?city=${encodeURIComponent(city)}`);
-  if (!forecastResponse.ok) {
-  throw new Error(`Fel vid prognoshämtning: ${forecastResponse.status} ${forecastResponse.statusText}`);
-  }
-  const forecastData = await forecastResponse.json();
-  const aiResponse = await fetch("/generate", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-  weather: weatherData.weather,
-  temp: weatherData.temp,
-  name: nameInput.value.trim(),
-  mood: moodSelect.value,
-  language: currentLanguage,
-  }),
-  });
-  if (!aiResponse.ok) {
-  throw new Error(`Fel vid poesigenerering: ${aiResponse.status} ${aiResponse.statusText}`);
-  }
-  const aiData = await aiResponse.json();
-  if (aiData.error) {
-  alert(aiData.error);
-  return;
-  }
-  weatherText.innerText = aiData.emotion;
-  setWeatherIcon(weatherData.weather);
-  updateBackground(weatherData.weather);
-  displayForecast(forecastData);
-  addWeatherAnimations(weatherData.weather);
-  } catch (error) {
-  console.error("Fel vid vädersökning:", error.message);
-  alert("Ett fel uppstod vid hämtning av väderdata. Kontrollera stadens namn och försök igen.");
-  } finally {
-  loadingIndicator.style.display = "none";
-  }
- });
- 
- // Skicka kommentar
- document.getElementById("submitComment").addEventListener("click", async () => {
-  const comment = commentInput.value.trim();
-  if (comment) {
-  try {
-  const response = await fetch("/comments", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ comment }),
-  });
-  if (!response.ok) {
-  throw new Error(`Fel vid kommentarsskicka: ${response.status} ${response.statusText}`);
-  }
-  const data = await response.json();
-  if (data.success) {
-  loadComments();
-  commentInput.value = "";
-  alert("Tack för din kommentar!");
-  }
-  } catch (error) {
-  console.error("Fel vid kommentarsskicka:", error.message);
-  alert("Kunde inte skicka kommentar, försök igen.");
-  }
-  } else {
-  alert("Vänligen skriv en kommentar innan du skickar.");
-  }
- });
- 
- // Ladda kommentarer
- async function loadComments() {
-  try {
-  const response = await fetch("/comments");
-  if (!response.ok) {
-  throw new Error(`Fel vid hämtning av kommentarer: ${response.status} ${response.statusText}`);
-  }
-  const comments = await response.json();
-  commentsDiv.innerHTML = comments
-  .map(
-  (c) =>
-  `<div class="bg-gray-100 dark:bg-gray-700 p-2 rounded shadow-md">${c.text}</div>`
-  )
-  .join("");
-  } catch (error) {
-  console.error("Fel vid hämtning av kommentarer:", error.message);
-  commentsDiv.innerHTML = "<p>Kunde inte ladda kommentarer.</p>";
-  }
- }
- 
- loadComments();
- 
- // Prenumerera på nyhetsbrev
- subscribeForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("subscribeEmail").value;
-  if (!email) {
-  alert("Vänligen ange en e-postadress.");
-  return;
-  }
-  try {
-  const response = await fetch("/subscribe", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ email }),
-  });
-  if (!response.ok) {
-  throw new Error(`Fel vid prenumeration: ${response.status} ${response.statusText}`);
-  }
-  const data = await response.json();
-  alert(data.message || "Tack för din prenumeration!");
-  subscribeForm.reset();
-  } catch (error) {
-  console.error("Fel vid prenumeration:", error.message);
-  alert("Kunde inte prenumerera, försök igen.");
-  }
- });
- 
- // Geolokalisering
- document.getElementById("geolocationButton").addEventListener("click", () => {
-  if (!navigator.geolocation) {
-  alert("Geolokalisering stöds inte av din webbläsare.");
-  return;
-  }
-  
-  // Visa laddningsindikator
-  loadingIndicator.style.display = "block";
-  
-  navigator.geolocation.getCurrentPosition(
-  async (position) => {
-  const { latitude, longitude } = position.coords;
-  try {
-  const response = await fetch(
-  `/geocode?lat=${latitude}&lon=${longitude}`
-  );
-  if (!response.ok) {
-  throw new Error(`HTTP-fel: ${response.status}`);
-  }
-  const data = await response.json();
-  if (data && data.length > 0) {
-  cityInput.value = data[0].name;
-  document.getElementById("searchButton").click();
-  } else {
-  alert(translations[currentLanguage].errorNoCity);
-  loadingIndicator.style.display = "none";
-  }
-  } catch (error) {
-  console.error("Fel vid hämtning av plats:", error);
-  alert("Kunde inte hämta plats. Försök igen.");
-  loadingIndicator.style.display = "none";
-  }
-  },
-  (error) => {
-  console.error("Geolokalisering nekad:", error.message);
-  alert("Tillåt platsåtkomst i webbläsaren för att använda denna funktion.");
-  loadingIndicator.style.display = "none";
-  }
-  );
- });
- 
- // Dela på sociala medier
- document.getElementById("shareFacebook").addEventListener("click", () => {
-  const text = encodeURIComponent(weatherText.innerText);
-  window.open(
-  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-  window.location.href
-  )}&quote=${text}`,
-  "_blank"
-  );
- });
- 
- document.getElementById("shareTwitter").addEventListener("click", () => {
-  const text = encodeURIComponent(weatherText.innerText);
-  window.open(
-  `https://twitter.com/intent/tweet?text=${text} - Skapad av Väderpoesi`,
-  "_blank"
-  );
- });
- 
- document.getElementById("shareInstagram").addEventListener("click", () => {
-  html2canvas(document.getElementById("weatherResult")).then((canvas) => {
-  const link = document.createElement("a");
-  link.download = "vaderpoesi.png";
-  link.href = canvas.toDataURL();
-  link.click();
-  alert("Bilden har laddats ner! Dela den på Instagram manuellt.");
-  }).catch((error) => {
-  console.error("Fel vid bildgenerering för Instagram:", error.message);
-  alert("Kunde inte generera bild för delning.");
-  });
- });
- 
- // Premium-knapp
- document.getElementById("premiumButton").addEventListener("click", () => {
-  alert(
-  translations[currentLanguage].premiumDescription +
-  " Klicka här för att gå till betalningssidan snart!"
-  );
-  // Implementera betalningsintegration (t.ex. Stripe) i framtiden
- });
- 
- // Hämta stadförslag
- async function fetchCitySuggestions(query) {
-  try {
-  const response = await fetch(`/geocode?query=${encodeURIComponent(query)}`);
-  if (!response.ok) {
-  throw new Error(`HTTP-fel: ${response.status} ${response.statusText}`);
-  }
-  const data = await response.json();
-  if (!data || data.length === 0) {
-  console.warn("Inga städer hittades för:", query);
-  return [];
-  }
-  return data.map((city) => ({
-  name: city.name,
-  country: city.country,
-  }));
-  } catch (error) {
-  console.error("Fel vid hämtning av stadförslag:", error.message);
-  return [];
-  }
- }
- 
- // Sätt väderikon
- function setWeatherIcon(weather) {
-  const icons = {
-  clear: "fa-sun",
-  clouds: "fa-cloud",
-  rain: "fa-cloud-rain",
-  snow: "fa-snowflake",
-  };
-  weatherIcon.className = `fas text-4xl mb-2 ${
-  icons[weather.toLowerCase()] || "fa-cloud"
-  }`;
- }
- 
- // Uppdatera bakgrund
- function updateBackground(weather) {
-  document.body.className = `transition-all duration-300 ${
-  weather.toLowerCase()
-  }${document.body.classList.contains("dark") ? " dark" : ""}`;
- }
- 
- // Lägg till väderanimationer
- function addWeatherAnimations(weather) {
-  animationContainer.innerHTML = "";
-  if (weather.toLowerCase() === "rain") {
-  for (let i = 0; i < 50; i++) {
-  const drop = document.createElement("div");
-  drop.className = "rain-animation";
-  drop.style.left = `${Math.random() * 100}vw`;
-  drop.style.animationDelay = `${Math.random() * 2}s`;
-  animationContainer.appendChild(drop);
-  }
-  } else if (weather.toLowerCase() === "snow") {
-  for (let i = 0; i < 30; i++) {
-  const flake = document.createElement("div");
-  flake.className = "snowflake";
-  flake.innerHTML = "❄";
-  flake.style.left = `${Math.random() * 100}vw`;
-  flake.style.animationDelay = `${Math.random() * 5}s`;
-  animationContainer.appendChild(flake);
-  }
-  } else if (weather.toLowerCase() === "clouds") {
-  for (let i = 0; i < 5; i++) {
-  const cloud = document.createElement("div");
-  cloud.className = "cloud-animation";
-  cloud.innerHTML = "☁";
-  cloud.style.top = `${Math.random() * 50}vh`;
-  cloud.style.left = `${Math.random() * 100}vw`;
-  cloud.style.animationDelay = `${Math.random() * 20}s`;
-  animationContainer.appendChild(cloud);
-  }
-  }
- }
- 
- // Visa prognos
- function displayForecast(data) {
-  forecastDiv.innerHTML = data
-  .map(
-  (day) => `
-  <div class="bg-white dark:bg-gray-800 p-2 rounded shadow-md text-center card">
-  <p class="font-bold">${day.date}</p>
-  <i class="fas ${
-  day.weather === "clear" ? "fa-sun" : "fa-cloud"
-  } text-2xl"></i>
-  <p>${day.temp}°C</p>
-  </div>
-  `
-  )
-  .join("");
- }
- 
- // Uppdatera språk
- function updateLanguage() {
-  const translation = translations[currentLanguage];
-  document.title = translation.title;
-  document.getElementById("nameInput").placeholder = translation.placeholderName;
-  document.getElementById("cityInput").placeholder = translation.placeholderCity;
-  document.getElementById("moodSelect").options[0].text =
-  translation.moodSelect;
-  for (let i = 1; i < moodSelect.options.length; i++) {
-  moodSelect.options[i].text = translation.moodOptions[i - 1];
-  }
-  document.getElementById("searchButton").innerText = translation.searchButton;
-  document.getElementById("geolocationButton").innerText =
-  translation.geolocationButton;
-  document.getElementById("loading").innerText = translation.loading;
-  document.querySelector("#comments-section h2").innerText =
-  translation.commentsTitle;
-  document.getElementById("commentInput").placeholder =
-  translation.commentPlaceholder;
-  document.getElementById("submitComment").innerText = translation.submitComment;
-  document.querySelector("#subscribe-section h2").innerText =
-  translation.subscribeTitle;
-  document.getElementById("subscribeEmail").placeholder =
-  translation.subscribePlaceholder;
-  document.getElementById("subscribeForm button").innerText =
-  translation.subscribeButton;
-  document.querySelector("footer p").innerText = translation.footer;
-  document.querySelector("footer a[href='/privacy']").innerText =
-  translation.privacy;
-  document.getElementById("donateButton").innerText = translation.donate;
-  document.querySelector("#premium-section h2").innerText =
-  translation.premiumText;
-  document.querySelector("#premium-section p").innerText =
-  translation.premiumDescription;
- }
- 
- updateLanguage();
+const express = require("express");
+const fetch = require("node-fetch");
+const NodeCache = require("node-cache");
+const path = require("path");
+const Mailchimp = require("mailchimp-api-v3");
+const { initializeApp } = require("firebase/app");
+const { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } = require("firebase/firestore");
+const app = express();
+require("dotenv").config();
 
- function checkMobile() {
-  const isMobile = window.innerWidth < 768;
-  document.body.classList.toggle("is-mobile", isMobile);
-  
-  // Anpassa UI för mobil
-  if (isMobile) {
-    // Förkorta vissa etiketter
-    if (currentLanguage === "sv") {
-      document.getElementById("searchButton").innerText = "Sök";
-      document.getElementById("geolocationButton").innerHTML = `<i class="fas fa-map-marker-alt"></i>`;
-    } else {
-      document.getElementById("searchButton").innerText = "Search";
-      document.getElementById("geolocationButton").innerHTML = `<i class="fas fa-map-marker-alt"></i>`;
-    }
-  } else {
-    updateLanguage(); // Återställer standardtexter
-  }
-}
+const cache = new NodeCache({ stdTTL: 3600 });
 
-// Kör vid sidladdning och när fönstret ändrar storlek
-window.addEventListener("load", checkMobile);
-window.addEventListener("resize", checkMobile);
+// Firebase configuration - Uppdaterad med ny konfiguration
+const firebaseConfig = {
+  apiKey: "AIzaSyBo2RfBpPFMeeOqFwq0Ff1JlHCGcovtgQM",
+  authDomain: "weather-poetry.firebaseapp.com",
+  projectId: "weather-poetry",
+  storageBucket: "weather-poetry.firebasestorage.app",
+  messagingSenderId: "180565121048",
+  appId: "1:180565121048:web:55eb41875eaffc8c848b6d",
+  measurementId: "G-YERD8SWQ3L"
+};
 
-const copyButton = document.createElement("button");
-copyButton.id = "copyPoetry";
-copyButton.innerHTML = `<i class="fas fa-copy"></i> Kopiera poesi`;
-copyButton.className = "social-btn bg-purple-500 hover:bg-purple-600 ml-2";
-copyButton.addEventListener("click", () => {
-  navigator.clipboard.writeText(weatherText.innerText)
-    .then(() => {
-      const originalText = copyButton.innerHTML;
-      copyButton.innerHTML = `<i class="fas fa-check"></i> Kopierat!`;
-      copyButton.classList.add("bg-green-500");
-      setTimeout(() => {
-        copyButton.innerHTML = originalText;
-        copyButton.classList.remove("bg-green-500");
-      }, 2000);
-    });
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+// Statiska filer ligger i rotmappen
+app.use(express.static(path.join(__dirname)));
+app.use(express.json());
+
+// Route för att servera index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
 });
-shareSection.appendChild(copyButton);
 
-function showToast(message, type = "info") {
-  const toast = document.createElement("div");
-  toast.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg ${
-    type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : "bg-blue-500"
-  } text-white z-50 animate__animated animate__fadeIn`;
-  toast.innerHTML = message;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.classList.add("animate__fadeOut");
-    setTimeout(() => {
-      document.body.removeChild(toast);
-    }, 500);
-  }, 3000);
-}
+// Hämtar väderdata
+app.get("/weather", async (req, res) => {
+  const city = req.query.city;
+  if (!city) {
+    console.error("Fel: Stad saknas i /weather-anrop");
+    return res.status(400).json({ error: "Stad måste anges" });
+  }
+
+  const cacheKey = `weather-${city}`;
+  const cachedWeather = cache.get(cacheKey);
+  if (cachedWeather) {
+    console.log(`Returnerar cachad väderdata för ${city}`);
+    return res.json(cachedWeather);
+  }
+
+  const apiKey = process.env.OPENWEATHERMAP_API_KEY;
+  if (!apiKey) {
+    console.error("Fel: OPENWEATHERMAP_API_KEY saknas");
+    return res.status(500).json({ error: "Serverkonfigurationsfel" });
+  }
+
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`Fel vid väderhämtning för ${city}: ${response.status} ${response.statusText}`);
+      return res.status(404).json({ error: "Staden hittades inte" });
+    }
+    const data = await response.json();
+    const weatherData = { weather: data.weather[0].main, temp: data.main.temp };
+    cache.set(cacheKey, weatherData);
+    res.json(weatherData);
+  } catch (error) {
+    console.error("Fel vid väderhämtning:", error.message);
+    res.status(500).json({ error: "Kunde inte hämta väderdata" });
+  }
+});
+
+// Hämtar väderprognos
+app.get("/forecast", async (req, res) => {
+  const city = req.query.city;
+  if (!city) {
+    console.error("Fel: Stad saknas i /forecast-anrop");
+    return res.status(400).json({ error: "Stad måste anges" });
+  }
+
+  const cacheKey = `forecast-${city}`;
+  const cachedForecast = cache.get(cacheKey);
+  if (cachedForecast) {
+    console.log(`Returnerar cachad prognos för ${city}`);
+    return res.json(cachedForecast);
+  }
+
+  const apiKey = process.env.OPENWEATHERMAP_API_KEY;
+  if (!apiKey) {
+    console.error("Fel: OPENWEATHERMAP_API_KEY saknas");
+    return res.status(500).json({ error: "Serverkonfigurationsfel" });
+  }
+
+  const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`Fel vid prognoshämtning för ${city}: ${response.status} ${response.statusText}`);
+      return res.status(404).json({ error: "Staden hittades inte" });
+    }
+    const data = await response.json();
+    const forecast = data.list.slice(0, 5).map(item => ({
+      date: new Date(item.dt * 1000).toLocaleDateString(),
+      weather: item.weather[0].main,
+      temp: Math.round(item.main.temp)
+    }));
+    cache.set(cacheKey, forecast);
+    res.json(forecast);
+  } catch (error) {
+    console.error("Fel vid prognoshämtning:", error.message);
+    res.status(500).json({ error: "Kunde inte hämta prognos" });
+  }
+});
+
+// Geokodning för autocomplete och omvänd geokodning
+app.get("/geocode", async (req, res) => {
+  const { query, lat, lon } = req.query;
+  const apiKey = process.env.OPENWEATHERMAP_API_KEY;
+  if (!apiKey) {
+    console.error("Fel: OPENWEATHERMAP_API_KEY saknas");
+    return res.status(500).json({ error: "Serverkonfigurationsfel" });
+  }
+
+  let url;
+  if (query) {
+    url = `http://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${apiKey}`;
+  } else if (lat && lon) {
+    url = `http://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=5&appid=${apiKey}`;
+  } else {
+    console.error("Fel: Ogiltig förfrågan till /geocode");
+    return res.status(400).json({ error: "Ogiltig förfrågan" });
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`Fel vid geokodning: ${response.status} ${response.statusText}`);
+      return res.status(200).json([]); // Returnera tom array istället för ett fel
+    }
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Fel vid geokodning:", error.message);
+    res.status(200).json([]); // Returnera tom array vid fel
+  }
+});
+
+// Generera poesi
+app.post("/generate", async (req, res) => {
+  const { weather, temp, name, mood, language } = req.body;
+  const cacheKey = `${weather}-${temp}-${name || ""}-${mood || ""}-${language}`;
+
+  const cachedItem = cache.get(cacheKey);
+  if (cachedItem) {
+    console.log(`Returnerar cachad poesi för nyckel: ${cacheKey}`);
+    return res.json({ emotion: cachedItem.data });
+  }
+
+  const prompt = `
+    Du är en passionerad väderpoet. Beskriv vädret "${weather}" och temperaturen ${temp}°C med ett starkt känslomässigt uttryck${name ? ` riktat till ${name}` : ""}${mood ? ` med en ${mood} ton` : ""}. 
+    Använd poetiska uttryck och levande bilder. Svara på ${language === "sv" ? "svenska" : "engelska"}. Max 2 meningar.
+  `;
+
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.error("Fel: GROQ_API_KEY saknas");
+    return res.status(500).json({ error: "Serverkonfigurationsfel" });
+  }
+
+  try {
+    const aiResponse = await fetch("https://api.groq.com/v1/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ prompt, max_tokens: 50 })
+    });
+    if (!aiResponse.ok) {
+      console.error(`Fel vid poesigenerering: ${aiResponse.status} ${aiResponse.statusText}`);
+      return res.status(500).json({ error: "Kunde inte generera poesi" });
+    }
+    const aiData = await aiResponse.json();
+    const text = aiData.choices[0].text.trim();
+    cache.set(cacheKey, { data: text, timestamp: Date.now() });
+    res.json({ emotion: text });
+  } catch (error) {
+    console.error("Fel vid poesigenerering:", error.message);
+    res.status(500).json({ error: "Kunde inte generera poesi" });
+  }
+});
+
+// Hantera kommentarer via Firebase
+app.post("/comments", async (req, res) => {
+  const { comment } = req.body;
+  if (!comment) {
+    console.error("Fel: Kommentar saknas i /comments-anrop");
+    return res.status(400).json({ error: "Kommentar krävs" });
+  }
+  try {
+    const docRef = await addDoc(collection(db, "comments"), {
+      text: comment,
+      timestamp: new Date().toISOString()
+    });
+    res.json({ id: docRef.id, success: true });
+  } catch (error) {
+    console.error("Fel vid sparande av kommentar:", error.message);
+    res.status(500).json({ error: "Kunde inte spara kommentar" });
+  }
+});
+
+// Hämta kommentarer från Firebase
+app.get("/comments", async (req, res) => {
+  try {
+    const commentsQuery = query(collection(db, "comments"), orderBy("timestamp", "desc"), limit(10));
+    const querySnapshot = await getDocs(commentsQuery);
+    const comments = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    res.json(comments);
+  } catch (error) {
+    console.error("Fel vid hämtning av kommentarer:", error.message);
+    res.status(500).json({ error: "Kunde inte hämta kommentarer" });
+  }
+});
+
+// Hantera nyhetsbrev via Mailchimp
+app.post("/subscribe", async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    console.error("Fel: E-post saknas i /subscribe-anrop");
+    return res.status(400).json({ error: "E-post krävs" });
+  }
+  const mailchimpApiKey = process.env.MAILCHIMP_API_KEY;
+  const listId = process.env.MAILCHIMP_LIST_ID;
+  if (!mailchimpApiKey || !listId) {
+    console.error("Fel: MAILCHIMP_API_KEY eller MAILCHIMP_LIST_ID saknas");
+    return res.status(500).json({ error: "Serverkonfigurationsfel" });
+  }
+  const mailchimp = new Mailchimp(mailchimpApiKey);
+  try {
+    await mailchimp.post(`/lists/${listId}/members`, {
+      email_address: email,
+      status: "subscribed"
+    });
+    res.json({ success: true, message: "Tack för din prenumeration!" });
+  } catch (error) {
+    console.error("Fel vid prenumeration:", error.message);
+    res.status(500).json({ error: "Kunde inte prenumerera, försök igen" });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server körs på port ${PORT}`));
