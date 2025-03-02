@@ -5,19 +5,21 @@ const path = require("path");
 const Mailchimp = require("mailchimp-api-v3");
 const { initializeApp } = require("firebase/app");
 const { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } = require("firebase/firestore");
+require("dotenv").config(); // Flytta detta till toppen
+
 const app = express();
-require("dotenv").config();
 
 const cache = new NodeCache({ stdTTL: 3600 });
 
-// Firebase configuration - Ersätt med dina Firebase-uppgifter
+// Firebase configuration - Uppdaterad för Weather-poetry-projektet
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || "din_firebase_api_nyckel",
-  authDomain: "vaderpoesi.firebaseapp.com",
-  projectId: "vaderpoesi",
-  storageBucket: "vaderpoesi.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef1234567890"
+  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyBo2RfBpPFMeeOqFwq0Ff1JlHCGcovtgQM",
+  authDomain: "weather-poetry.firebaseapp.com",
+  projectId: "weather-poetry",
+  storageBucket: "weather-poetry.firebasestorage.app",
+  messagingSenderId: "180565121048",
+  appId: "1:180565121048:web:55eb41875eaffc8c848b6d",
+  measurementId: "G-YERD8SWQ3L"
 };
 
 const firebaseApp = initializeApp(firebaseConfig);

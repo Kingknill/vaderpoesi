@@ -6,7 +6,6 @@ const Mailchimp = require("mailchimp-api-v3");
 const { initializeApp } = require("firebase/app");
 const { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } = require("firebase/firestore");
 const app = express();
-require("dotenv").config();
 
 const cache = new NodeCache({ stdTTL: 3600 });
 
@@ -250,6 +249,15 @@ app.post("/subscribe", async (req, res) => {
     console.error("Fel vid prenumeration:", error.message);
     res.status(500).json({ error: "Kunde inte prenumerera, försök igen" });
   }
+});
+
+// Hantera klick på populära städer
+document.querySelectorAll(".popular-city").forEach(button => {
+  button.addEventListener("click", () => {
+    const city = button.getAttribute("data-city");
+    cityInput.value = city;
+    document.getElementById("searchButton").click();
+  });
 });
 
 const PORT = process.env.PORT || 3000;
