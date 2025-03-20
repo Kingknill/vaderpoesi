@@ -46,6 +46,12 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// Serve service-worker.js with correct MIME type
+app.get('/service-worker.js', (req, res) => {
+  res.set('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, 'src', 'service-worker.js'));
+});
+
 // Hämtar väderdata
 app.get("/api/weather", async (req, res) => {
   const city = req.query.city;
