@@ -13,17 +13,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Fix __dirname för ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const cache = new NodeCache({ stdTTL: 3600 });
 
-// Lägg till CORS-stöd
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://vaderpoesi.onrender.com'],
+  methods: ['GET', 'POST'],
+}));
 
-// Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY || "AIzaSyBo2RfBpPFMeeOqFwq0Ff1JlHCGcovtgQM",
   authDomain: "weather-poetry.firebaseapp.com",
@@ -37,19 +37,13 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 
-// Statiska filer ligger i rotmappen
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.json());
-
-// Route för att servera index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
 
 // Serve service-worker.js with correct MIME type
 app.get('/service-worker.js', (req, res) => {
   res.set('Content-Type', 'application/javascript');
-  res.sendFile(path.join(__dirname, 'src', 'service-worker.js'));
+  res.sendFile(path.join(__dirname, 'public', 'service-worker.js'));
 });
 
 // Hämtar väderdata
@@ -59,20 +53,17 @@ app.get("/api/weather", async (req, res) => {
     console.error("Fel: Stad saknas i /weather-anrop");
     return res.status(400).json({ error: "Stad måste anges" });
   }
-
   const cacheKey = `weather-${city}`;
   const cachedWeather = cache.get(cacheKey);
   if (cachedWeather) {
     console.log(`Returnerar cachad väderdata för ${city}`);
     return res.json(cachedWeather);
   }
-
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) {
     console.error("Fel: OPENWEATHER_API_KEY saknas");
     return res.status(500).json({ error: "Serverkonfigurationsfel" });
   }
-
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
   try {
     const response = await fetch(url);
@@ -97,20 +88,17 @@ app.get("/api/forecast", async (req, res) => {
     console.error("Fel: Stad saknas i /forecast-anrop");
     return res.status(400).json({ error: "Stad måste anges" });
   }
-
   const cacheKey = `forecast-${city}`;
   const cachedForecast = cache.get(cacheKey);
   if (cachedForecast) {
     console.log(`Returnerar cachad prognos för ${city}`);
     return res.json(cachedForecast);
   }
-
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) {
     console.error("Fel: OPENWEATHER_API_KEY saknas");
     return res.status(500).json({ error: "Serverkonfigurationsfel" });
   }
-
   const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
   try {
     const response = await fetch(url);
@@ -140,7 +128,6 @@ app.get("/api/geocode", async (req, res) => {
     console.error("Fel: OPENWEATHER_API_KEY saknas");
     return res.status(500).json({ error: "Serverkonfigurationsfel" });
   }
-
   let url;
   if (query) {
     url = `http://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${apiKey}`;
@@ -150,18 +137,17 @@ app.get("/api/geocode", async (req, res) => {
     console.error("Fel: Ogiltig förfrågan till /geocode");
     return res.status(400).json({ error: "Ogiltig förfrågan" });
   }
-
   try {
     const response = await fetch(url);
     if (!response.ok) {
       console.error(`Fel vid geokodning: ${response.status} ${response.statusText}`);
-      return res.status(200).json([]); // Returnera tom array istället för ett fel
+      return res.status(200).json([]);
     }
     const data = await response.json();
     res.json(data);
   } catch (error) {
     console.error("Fel vid geokodning:", error.message);
-    res.status(200).json([]); // Returnera tom array vid fel
+    res.status(200).json([]);
   }
 });
 
@@ -169,21 +155,16 @@ app.get("/api/geocode", async (req, res) => {
 app.post("/api/generate", async (req, res) => {
   console.log("Received language:", req.body.language);
   const { weather, temp, name, mood, language, city } = req.body;
-  
   if (!city) {
     console.error("Fel: Stad saknas i /generate-anrop");
     return res.status(400).json({ error: "Stad måste anges" });
   }
-
   const cacheKey = `${weather}-${temp}-${name || ""}-${mood || ""}-${language}-${city}`;
-
   const cachedItem = cache.get(cacheKey);
   if (cachedItem) {
     console.log(`Returnerar cachad poesi för nyckel: ${cacheKey}`);
     return res.json({ emotion: cachedItem.data });
   }
-
-  // Hämta prognosdata
   let forecast = [];
   try {
     const apiKey = process.env.OPENWEATHER_API_KEY;
@@ -191,10 +172,8 @@ app.post("/api/generate", async (req, res) => {
       console.error("Fel: OPENWEATHER_API_KEY saknas");
       return res.status(500).json({ error: "Serverkonfigurationsfel" });
     }
-
     const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
     const forecastResponse = await fetch(forecastUrl);
-    
     if (forecastResponse.ok) {
       const forecastData = await forecastResponse.json();
       forecast = forecastData.list.slice(0, 5).map(item => ({
@@ -208,14 +187,12 @@ app.post("/api/generate", async (req, res) => {
   } catch (error) {
     console.warn("Fel vid prognoshämtning, fortsätter med endast aktuellt väder:", error.message);
   }
-
   const prompt = `
-  You are a poet tasked with writing a short poetic text (2-3 sentences) about the weather based on the following data: weather "${weather}" and temperature ${temp}°C${forecast.length > 0 ? `, and forecast: ${JSON.stringify(forecast)}` : ''}. Make the text personal, emotional, and use idiomatic ${language === "sv" ? "Swedish" : "English"}. Avoid illogical metaphors (e.g., cold weather as "warm") and end with a complete sentence.
+  You are a poet tasked with writing a short poetic text (2-3 sentences) about the weather based on the following data: weather "${weather}" and temperature ${temp}°C${forecast.length > 0 ? `, and forecast: ${JSON.stringify(forecast)}` : ''}. Make the text personal, emotional, and use idiomatic ${language === "sv" ? "Swedish" : "English"}. Avoid illogical metaphors (e.g., cold weather as "warm") and  make sure to end with a complete sentence.
   Use a strong emotional expression${name ? ` directed to ${name}` : ""}${mood ? ` with a ${mood} tone` : ""}.
   Respond exclusively in ${language === "sv" ? "Swedish" : "English"}.
-`;
-console.log("Generated prompt:", prompt);
-
+  `;
+  console.log("Generated prompt:", prompt);
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     console.error("Fel: GROQ_API_KEY saknas");
@@ -325,6 +302,11 @@ app.post("/api/subscribe", async (req, res) => {
     });
     res.status(500).json({ error: "Kunde inte prenumerera, försök igen" });
   }
+});
+
+// Hantera alla andra rutter sist (för SPA)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;

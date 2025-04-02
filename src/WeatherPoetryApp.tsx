@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Textarea } from "../components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { Textarea } from "./components/ui/textarea";
 import { SunIcon, CloudIcon, CloudRainIcon, SnowflakeIcon, TwitterIcon, FacebookIcon, InstagramIcon, MapPinIcon, MoonIcon } from "lucide-react";
-import AdSlot from "../components/ui/adslot"; // Add this line to import AdSlot
+import AdSlot from "./components/ui/Adslot"; // Add this line to import AdSlot
 
 // Definiera typer för språk och översättningar
 type Language = 'sv' | 'en';

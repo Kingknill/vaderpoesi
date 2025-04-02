@@ -1,9 +1,0 @@
-{
-    "name": "Väderpoesi",
-    "short_name": "Väderpoesi",
-    "description": "Upplev vädret med poesi",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#3B82F6"
-    }
